@@ -1,0 +1,19 @@
+{
+  "name": "laya-node-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure-Node.js Laya decision server (offline): laya-ts + onnxruntime-node, no Python at runtime.",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "smoke": "node smoke.mjs"
+  },
+  "dependencies": {
+    "laya-ts": "file:./vendor/laya-ts-0.1.0.tgz",
+    "onnxruntime-node": "^1.20.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
