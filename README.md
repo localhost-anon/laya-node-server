@@ -8,6 +8,7 @@ runtime, fully offline** — the model weights (ONNX), the tokenizers, the `laya
 
 ```
 server.mjs                  HTTP server (node:http, zero web-framework deps)
+mcp.mjs                     MCP server (stdio) — Laya as tools for Claude Code & other agents
 playground.mjs              web UI served at GET / + preset workflows (from laya-ts presets)
 smoke.mjs                   offline end-to-end test (loads models, runs predictions)
 models/english/             ModernBERT-large checkpoint → encoder.onnx + head.onnx + tokenizer
@@ -70,6 +71,27 @@ curl -s localhost:8000/v1/systemone -H 'content-type: application/json' -d '{
 Env vars: `LAYA_HOST` (127.0.0.1), `LAYA_PORT` (8000), `LAYA_API_KEY` (enables
 `Authorization: Bearer` auth), `LAYA_DEFAULT` (checkpoint for undetectable short text,
 default `english`), `LAYA_MAX_CONCURRENT` (admission limit, default 2 — excess load gets 503).
+
+## MCP server (Claude Code integration)
+
+`mcp.mjs` exposes Laya as MCP tools over stdio — same tool surface as upstream's Python
+`laya-mcp-server`, but pure Node and fully offline:
+
+```bash
+claude mcp add laya -- node /absolute/path/to/server/mcp.mjs
+```
+
+- `laya_status` — checkpoints on disk / loaded in memory
+- `laya_route` — routing decision + language detection only (sub-ms, never loads a model)
+- `laya_predict` — typed decisions (choice/score/noul) with calibrated probabilities
+- `laya_preset` — one-call workflows: triage, email, guard (jailbreak/prompt-injection
+  detection), moderation, router
+
+Models load lazily: registering the server costs nothing; the first `laya_predict` loads
+the routed checkpoint (~5 s), after which calls take ~50–250 ms on CPU. This lets Claude
+delegate bulk classification, triage, and guardrail gates to a local model — sensitive
+text never leaves the machine and no tokens are spent. Env: `LAYA_MODELS_DIR`,
+`LAYA_DEFAULT`.
 
 ## Using it as a library instead
 
